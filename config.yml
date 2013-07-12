@@ -1,0 +1,22 @@
+experience:
+    #Amount of levels worth of experience deposited/withdrawn per click.
+    deposit: 1
+    depositShift: 5
+    withdraw: 1
+    withdrawShift: 5
+    #Max amount of experience that can be stored in one vault (set to 0 to disable limit)
+    max: 1000
+
+economy:
+    #This plugin uses Vault, vault supports most economy plugins. Download vault on bukkitdev if you don't have it.
+    enable: false
+    #Cost to create an expvault.
+    create: 300
+    #Money returned when removing an expvault.
+    return: 0
+
+#When transferring from a different plugin that stores exp/levels on a sign, enable that plugin here.
+#When a player uses their old sign, the sign will be changed to an expvault sign and transfer the previously stored exp/levels.
+#Setting this to true will also make it impossible to create "fake" signs of the old plugin.
+transfer:
+    expbank: false

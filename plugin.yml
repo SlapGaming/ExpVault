@@ -1,0 +1,15 @@
+name: ExpVault
+main: me.naithantu.ExpVault.ExpVault
+soft-depend: [Vault]
+author: naithantu
+version: 0.3
+
+commands:
+  expvault:
+    description: Main ExpVault command used to reload and display information.
+    usage: /expvault
+  checkid:
+    description: This command will show you your player ID
+    usage: /checkid
+    permission: expvault.checkid
+    permission-message: You do not have permission for that!
