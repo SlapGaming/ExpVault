@@ -6,7 +6,6 @@ import java.util.logging.Logger;
 
 import net.milkbowl.vault.economy.Economy;
 
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.block.Sign;
 import org.bukkit.command.Command;
@@ -132,7 +131,7 @@ public class ExpVault extends JavaPlugin implements Listener {
 				if (config.getInt("economy.return") == 0)
 					return;
 				econ.depositPlayer(player.getName(), config.getInt("economy.return"));
-				sendMessage(player, "You have been returned " + config.getInt("economy.create") + " for removing your ExpVault.");
+				sendMessage(player, "You have been returned " + config.getInt("economy.return") + " for removing your ExpVault.");
 			}
 		} else {
 			event.setCancelled(true);
