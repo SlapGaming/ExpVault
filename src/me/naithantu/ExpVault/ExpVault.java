@@ -1,11 +1,6 @@
 package me.naithantu.ExpVault;
 
-import java.io.File;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import net.milkbowl.vault.economy.Economy;
-
 import org.bukkit.ChatColor;
 import org.bukkit.block.Sign;
 import org.bukkit.command.Command;
@@ -21,6 +16,10 @@ import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.io.File;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ExpVault extends JavaPlugin implements Listener {
 
@@ -122,7 +121,7 @@ public class ExpVault extends JavaPlugin implements Listener {
 		Sign sign = (Sign) event.getBlock().getState();
 		if (!sign.getLine(0).equals(header))
 			return;
-		if (Integer.parseInt(sign.getLine(3)) == ids.getPlayerID().get(player.getName()) || player.hasPermission("expvault.override")) {
+		if (ids.getPlayerID().containsKey(player.getName()) && Integer.parseInt(sign.getLine(3)) == ids.getPlayerID().get(player.getName()) || player.hasPermission("expvault.override")) {
 			String expLine = sign.getLine(2);
 			int exp = Integer.parseInt(expLine.replace("Exp: ", ""));
 			player.giveExp(exp);
@@ -146,18 +145,23 @@ public class ExpVault extends JavaPlugin implements Listener {
 		Player player = event.getPlayer();
 		if (event.getClickedBlock().getTypeId() == 63 || event.getClickedBlock().getTypeId() == 68) {
 			Sign sign = (Sign) event.getClickedBlock().getState();
+            //Check if it is an expvault.
 			if (!sign.getLine(0).equalsIgnoreCase(header)) {
+                //If not an expvault, check if it is an expbank that can be converted.
 				transfer.handleSignInteract(event);
 				return;
 			}
+            //Check permission
+            if (!player.hasPermission("expvault.create")) {
+                player.sendMessage(ChatColor.RED + "You do not have permission for that!");
+                return;
+            }
+            //Check if the expvault belongs to the player
 			if (!(Integer.parseInt(sign.getLine(3)) == ids.getPlayerID().get(player.getName()))) {
 				sendMessage(player, "That is not your ExpVault!");
 				return;
 			}
-			if (!player.hasPermission("expvault.create")) {
-				player.sendMessage(ChatColor.RED + "You do not have permission for that!");
-				return;
-			}
+
 			if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
 				addToSign(event, player);
 			} else if (event.getAction() == Action.RIGHT_CLICK_BLOCK)

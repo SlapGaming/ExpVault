@@ -2,7 +2,7 @@ name: ExpVault
 main: me.naithantu.ExpVault.ExpVault
 soft-depend: [Vault]
 author: naithantu
-version: 0.3
+version: 0.3.1
 
 commands:
   expvault:
