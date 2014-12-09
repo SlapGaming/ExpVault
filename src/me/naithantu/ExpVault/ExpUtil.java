@@ -11,13 +11,13 @@ public class ExpUtil {
 		return totalXp;
 	}
 	public static int getXpFromLast(int level) {
-		if (level > 29) {
-			return 62 + (level - 30) * 7;
-		}
-		if (level > 15) {
-			return 17 + (level - 15) * 3;
-		}
-		return 17;
+		if (level >= 31) {
+			return (9 * level) - 158;
+		} else if (level >= 16) {
+            return (5 * level) - 38;
+        } else {
+            return (2 * level) + 7;
+        }
 	}
 
 	public static int getXpFromLastLevel(int level, float progress) {
