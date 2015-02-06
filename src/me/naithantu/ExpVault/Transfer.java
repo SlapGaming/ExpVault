@@ -8,6 +8,7 @@ import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 
 public class Transfer {
+
 	Configuration config;
 	String header;
 	IDs ids;
@@ -19,7 +20,7 @@ public class Transfer {
 	}
 
 	public void handleSignPlace(SignChangeEvent event) {
-		if (config.getBoolean("transfer.expbank") == true) {
+		if (config.getBoolean("transfer.expbank")) {
 			if (event.getLine(0).equalsIgnoreCase("[expbank]")) {
 				event.getPlayer().sendMessage(ChatColor.RED + "You may not create an ExpBank sign. Make an ExpVault sign instead.");
 				event.setCancelled(true);
@@ -28,7 +29,7 @@ public class Transfer {
 	}
 
 	public void handleSignInteract(PlayerInteractEvent event) {
-		if (config.getBoolean("transfer.expbank") == true) {
+		if (config.getBoolean("transfer.expbank")) {
 			Sign sign = (Sign) event.getClickedBlock().getState();
 			if (sign.getLine(0).equalsIgnoreCase("[expbank]")) {
 				String playerName = sign.getLine(1);
@@ -62,14 +63,20 @@ public class Transfer {
 	}
 
 	private void createSign(Sign sign, Player player, int exp) {
-		sign.setLine(0, header);
-		sign.setLine(1, player.getName());
-		sign.setLine(2, "Exp: " + exp);
-		if (!ids.getPlayerID().containsKey(player.getName())) {
-			sign.setLine(3, Integer.toString(ids.createID(player)));
-		} else {
-			sign.setLine(3, Integer.toString(ids.getPlayerID().get(player.getName())));
-		}
+        //Set the first 3 lines
+        sign.setLine(0, header);
+        sign.setLine(1, player.getName());
+        sign.setLine(2, "Exp: " + exp);
+
+        //Get the PlayerID
+        Integer id = ids.getPlayerID(player);
+        if (id == null) {
+            //No ID given yet
+            id = ids.createID(player);
+        }
+
+        //Set the last line
+        sign.setLine(3, String.valueOf(id));
 		sign.update();
 	}
 }

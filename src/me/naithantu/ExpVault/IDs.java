@@ -1,10 +1,10 @@
 package me.naithantu.ExpVault;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.bukkit.configuration.Configuration;
 import org.bukkit.entity.Player;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class IDs {
 	ExpVault plugin;
@@ -19,8 +19,8 @@ public class IDs {
 		this.idConfig = idStorage.getConfig();
 	}
 	
-	public HashMap<String, Integer> getPlayerID(){
-		return playerID;
+	public Integer getPlayerID(Player player){
+		return playerID.get(player.getUniqueId().toString());
 	}
 
 	public void saveIDS() {
@@ -41,7 +41,7 @@ public class IDs {
 	
 	public int createID(Player player) {
 		int value = playerID.size() + 1;
-		playerID.put(player.getName(), value);
+		playerID.put(player.getUniqueId().toString(), value);
 		return value;
 	}
 }

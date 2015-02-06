@@ -2,6 +2,7 @@ package me.naithantu.ExpVault;
 
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.block.Sign;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -59,7 +60,7 @@ public class ExpVault extends JavaPlugin implements Listener {
 	}
 
 	private boolean setupEconomy() {
-		if (getConfig().getBoolean("economy.enable") == true) {
+		if (getConfig().getBoolean("economy.enable")) {
 			if (getServer().getPluginManager().getPlugin("Vault") == null) {
 				return false;
 			}
@@ -98,17 +99,15 @@ public class ExpVault extends JavaPlugin implements Listener {
 			return true;
 		}
 
-		if (!(sender instanceof Player)) {
-			sender.sendMessage(ChatColor.RED + "You need to be in-game to do that!");
-		}
-
-		Player player = (Player) sender;
-		if (player != null) {
-			if (cmd.getName().equalsIgnoreCase("checkid")) {
-				sendMessage(sender, "Your ID is: " + ids.getPlayerID().get(player.getName()));
-				return true;
-			}
-		}
+        //Command to check the ID
+        if (cmd.getName().equals("checkid")) {
+            if (!(sender instanceof Player)) {
+                sender.sendMessage(ChatColor.RED + "You need to be in-game to do that!");
+            } else {
+                sendMessage(sender, "Your ID is: " + ids.getPlayerID((Player) sender));
+            }
+            return true;
+        }
 		return false;
 	}
 
@@ -119,22 +118,29 @@ public class ExpVault extends JavaPlugin implements Listener {
 
 		Player player = event.getPlayer();
 		Sign sign = (Sign) event.getBlock().getState();
-		if (!sign.getLine(0).equals(header))
-			return;
-		if (ids.getPlayerID().containsKey(player.getName()) && Integer.parseInt(sign.getLine(3)) == ids.getPlayerID().get(player.getName()) || player.hasPermission("expvault.override")) {
-			String expLine = sign.getLine(2);
-			int exp = Integer.parseInt(expLine.replace("Exp: ", ""));
-			player.giveExp(exp);
-			sendMessage(player, "You have collected the experience stored in the ExpVault.");
-			if (config.getBoolean("economy.enable")) {
-				if (config.getInt("economy.return") == 0)
-					return;
-				econ.depositPlayer(player.getName(), config.getInt("economy.return"));
-				sendMessage(player, "You have been returned " + config.getInt("economy.return") + " for removing your ExpVault.");
-			}
-		} else {
-			event.setCancelled(true);
-		}
+		if (!sign.getLine(0).equals(header)) {
+            return;
+        }
+
+        //Check if the owner or override
+        Integer id = ids.getPlayerID(player);
+        int foundID = Integer.valueOf(sign.getLine(3));
+        if ((id == null || id != foundID) && !player.hasPermission("expvault.override")) {
+            event.setCancelled(true);
+            return;
+        }
+
+        //Get the Exp
+        String expLine = sign.getLine(2);
+        int exp = Integer.parseInt(expLine.replace("Exp: ", ""));
+        player.giveExp(exp);
+        sendMessage(player, "You have collected the experience stored in the ExpVault.");
+        if (config.getBoolean("economy.enable")) {
+            if (config.getInt("economy.return") == 0)
+                return;
+            econ.depositPlayer(player, config.getInt("economy.return"));
+            sendMessage(player, "You have been returned " + config.getInt("economy.return") + " for removing your ExpVault.");
+        }
 	}
 
 	@EventHandler
@@ -143,7 +149,7 @@ public class ExpVault extends JavaPlugin implements Listener {
 			return;
 
 		Player player = event.getPlayer();
-		if (event.getClickedBlock().getTypeId() == 63 || event.getClickedBlock().getTypeId() == 68) {
+		if (event.getClickedBlock().getType() == Material.SIGN_POST|| event.getClickedBlock().getType() == Material.WALL_SIGN) {
 			Sign sign = (Sign) event.getClickedBlock().getState();
             //Check if it is an expvault.
 			if (!sign.getLine(0).equalsIgnoreCase(header)) {
@@ -157,7 +163,7 @@ public class ExpVault extends JavaPlugin implements Listener {
                 return;
             }
             //Check if the expvault belongs to the player
-			if (!(Integer.parseInt(sign.getLine(3)) == ids.getPlayerID().get(player.getName()))) {
+			if (Integer.parseInt(sign.getLine(3)) != ids.getPlayerID(player)) {
 				sendMessage(player, "That is not your ExpVault!");
 				return;
 			}
@@ -171,14 +177,22 @@ public class ExpVault extends JavaPlugin implements Listener {
 	}
 
 	private void subtractFromSign(PlayerInteractEvent event, Player player) {
+        //Get the Exp
 		Sign sign = (Sign) event.getClickedBlock().getState();
 		String expLine = sign.getLine(2);
-		int exp = Integer.parseInt(expLine.replace("Exp: ", ""));
+        int exp = Integer.parseInt(expLine.replace("Exp: ", ""));
+
+        //Update the name (incase of a name change)
+        sign.setLine(1, player.getName());
+
+        //Check if any XP in the vault
 		if (exp <= 0) {
+            sign.update();
 			sendMessage(player, "That ExpVault is empty!");
 			return;
 		}
 
+        //Convert to levels
 		int level = player.getLevel();
 		int levelsToWithdraw = 0;
 		if (player.isSneaking()) {
@@ -211,9 +225,13 @@ public class ExpVault extends JavaPlugin implements Listener {
 		String expLine = sign.getLine(2);
 		int expOnSign = Integer.parseInt(expLine.replace("Exp: ", ""));
 
+        //Update the name incase of name change
+        sign.setLine(1, player.getName());
+
 		int maxExp = config.getInt("experience.max");
 		//If sign is already full, return.
 		if (!(expOnSign < maxExp)) {
+            sign.update();
 			sendMessage(player, "That ExpVault is full!");
 			return;
 		}
@@ -283,12 +301,12 @@ public class ExpVault extends JavaPlugin implements Listener {
 		}
 		if (config.getBoolean("economy.enable")) {
 			if (config.getInt("economy.create") != 0) {
-				if (econ.getBalance(player.getName()) < config.getInt("economy.create")) {
+				if (econ.getBalance(player) < config.getInt("economy.create")) {
 					sendMessage(player, "You do not have enough money!");
 					event.setLine(0, "");
 					return;
 				}
-				econ.withdrawPlayer(player.getName(), config.getInt("economy.create"));
+				econ.withdrawPlayer(player, config.getInt("economy.create"));
 				sendMessage(player, "ExpVault made! You have been charged " + config.getInt("economy.create") + ".");
 			}
 		}
@@ -297,15 +315,20 @@ public class ExpVault extends JavaPlugin implements Listener {
 	}
 
 	private void createSign(SignChangeEvent event, Player player) {
+        //Set the first 3 lines
 		event.setLine(0, header);
 		event.setLine(1, event.getPlayer().getName());
 		event.setLine(2, "Exp: 0");
-		if (!ids.getPlayerID().containsKey(player.getName())) {
-			event.setLine(3, Integer.toString(ids.createID(player)));
-		} else {
-			event.setLine(3, Integer.toString(ids.getPlayerID().get(player.getName())));
-		}
-		return;
+
+        //Get the PlayerID
+        Integer id = ids.getPlayerID(player);
+        if (id == null) {
+            //No ID given yet
+            id = ids.createID(player);
+        }
+
+        //Set the last line
+        event.setLine(3, String.valueOf(id));
 	}
 
 	private void removeAllExperience(Player player) {
