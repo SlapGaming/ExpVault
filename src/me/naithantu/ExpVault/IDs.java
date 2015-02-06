@@ -10,6 +10,8 @@ public class IDs {
 	ExpVault plugin;
 	Configuration idConfig;
 	IDStorage idStorage;
+
+    private int highestID = 1;
 	
 	public HashMap<String, Integer> playerID = new HashMap<String, Integer>();
 	
@@ -35,12 +37,16 @@ public class IDs {
 		if (idConfig.getConfigurationSection("playerids") == null)
 			return;
 		for (String key : idConfig.getConfigurationSection("playerids").getKeys(false)) {
-			playerID.put(key, idConfig.getInt("playerids." + key));
+            int foundID = idConfig.getInt("playerids." + key);
+            if (foundID > highestID) {
+                highestID = foundID;
+            }
+			playerID.put(key, foundID);
 		}
 	}
 	
 	public int createID(Player player) {
-		int value = playerID.size() + 1;
+		int value = ++highestID;
 		playerID.put(player.getUniqueId().toString(), value);
 		return value;
 	}
